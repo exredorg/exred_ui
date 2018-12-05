@@ -1,0 +1,13 @@
+{
+  "assets": {
+    "assets/ace/worker-javascript.js": "assets/ace/worker-javascript-f9bf9e5a4d754ad57518cb45482dabfa.js",
+    "assets/assetMap.json": "assets/assetMap.json",
+    "assets/exred-fastboot.js": "assets/exred-fastboot-5860568af3f3a57c3392f1055ef1d7b6.js",
+    "assets/exred.css": "assets/exred-37d1b05f1a2eb94690f987aadb59b903.css",
+    "assets/exred.js": "assets/exred-969b80dac28b38540c038dffff31b361.js",
+    "assets/vendor.css": "assets/vendor-44db7016f7bf84fc592e3ff82b5f3d15.css",
+    "assets/vendor.js": "assets/vendor-185d5a0a05374d486ba47f59c7e97ed2.js",
+    "ember-fetch/fastboot-fetch.js": "ember-fetch/fastboot-fetch-805e176077930c98aec5834ae48bd0f2.js"
+  },
+  "prepend": ""
+}
