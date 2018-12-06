@@ -46,7 +46,8 @@ end
 # will be used by default
 
 release :exred_ui do
-  set(version: "0.1.5")
+  vsn = File.read!("VERSION") |> String.trim()
+  set(version: vsn)
 
   set(
     applications: [

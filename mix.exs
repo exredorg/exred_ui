@@ -1,10 +1,12 @@
 defmodule ExredUI.Mixfile do
   use Mix.Project
 
+  @version File.read!("VERSION") |> String.trim()
+
   def project do
     [
       app: :exred_ui,
-      version: "0.0.1",
+      version: @version,
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env),
       build_path: "./_build",
@@ -50,7 +52,8 @@ defmodule ExredUI.Mixfile do
       {:ja_serializer, "~> 0.12.0"},
       {:ecto_boot_migration, "~> 0.1.0"},
       {:distillery, "~> 1.5", runtime: false},
-      {:conform, "~> 2.2"}
+      {:conform, "~> 2.2"},
+      {:ex_doc, "~> 0.19.0", only: :dev, runtime: false}
     ]
   end
 
