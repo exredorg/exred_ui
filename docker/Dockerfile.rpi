@@ -1,0 +1,73 @@
+# Build container
+#################################
+FROM resin/rpi-raspbian:stretch as builder
+
+WORKDIR /elixir
+RUN set -xe \
+  && apt-get update \
+  && apt-get install apt-transport-https \
+  && echo "deb https://packages.erlang-solutions.com/debian stretch contrib" | tee /etc/apt/sources.list.d/erlang-solutions.list \
+  && curl -fSl -O https://packages.erlang-solutions.com/debian/erlang_solutions.asc \
+  && apt-key add erlang_solutions.asc \
+  && apt-get update \
+  && apt-get install elixir \
+  && apt-get install erlang-dev erlang-parsetools \
+  && apt-get install git openssh-client build-essential
+
+
+WORKDIR /
+COPY apps/exred_scheduler exred_scheduler
+RUN rm -rf /exred_ui/_build /exred_ui/deps
+
+WORKDIR /exred_scheduler
+ENV MIX_ENV=prod
+
+RUN mix local.hex --force
+RUN mix local.rebar --force
+RUN mix do deps.get, deps.compile
+RUN mix compile
+RUN mix release --env=prod --verbose
+
+
+# Final image
+#################################
+FROM resin/rpi-raspbian:stretch
+
+ARG VERSION=0.1.5
+
+#
+# add camera support (only works if container is run with --device=/dev/vchiq or --privileged)
+#
+RUN apt-get -q update && apt-get -y install libraspberrypi-bin && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN usermod -a -G video root
+CMD modprobe bcm2835-v4l2
+
+#
+# deploy Exred app
+#
+
+EXPOSE 4000
+
+ENV MIX_ENV=prod \
+  REPLACE_OS_VARS=true \
+  SHELL=/bin/bash
+
+COPY docker/rpi_xbuild/prod/assets/wait-for-it.sh /usr/local/bin/
+COPY docker/rpi_xbuild/prod/assets/wait-for-postgres.sh /usr/local/bin/
+
+RUN apt-get update && \ 
+  apt-get install -y \
+  postgresql-client && \
+  rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=builder /exred_scheduler/_build/prod/rel/exred_scheduler/releases/${VERSION}/exred_scheduler.tar.gz .
+RUN tar zxf exred_scheduler.tar.gz && rm exred_scheduler.tar.gz
+RUN chown -R root ./releases
+
+# truncate conf file, configuration will be passed in through environment variables (see conf schemas)
+RUN echo "" > ./releases/${VERSION}/exred_scheduler.conf
+
+USER root
+CMD ["/app/bin/exred_scheduler", "foreground"]

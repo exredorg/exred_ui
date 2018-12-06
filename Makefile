@@ -81,7 +81,7 @@ docs: git-status-test
 	@echo $(MAKE_DONE)
 
 run:
-	iex -S mix
+	iex -S mix phx.server
 
 test:
 	@echo ${LOG_PREFIX} running tests

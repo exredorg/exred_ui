@@ -1,0 +1,52 @@
+# Build container
+#################################
+FROM elixir:1.7.4-alpine as builder
+
+
+WORKDIR /
+COPY . exred_ui
+
+WORKDIR /exred_ui
+
+ENV MIX_ENV=prod
+
+# This step installs all the build tools we'll need
+RUN apk update && \
+  apk upgrade --no-cache && \
+  apk add --no-cache \
+  build-base && \
+  mix local.rebar --force && \
+  mix local.hex --force
+
+RUN mix do deps.get, deps.compile, compile
+RUN mix release --env=prod --verbose
+
+
+# Final image
+#################################
+FROM alpine:3.8
+
+ARG VERSION
+
+RUN apk update && \
+  apk add --no-cache \
+  bash \
+  openssl-dev \
+  postgresql-client
+
+ENV MIX_ENV=prod \
+  REPLACE_OS_VARS=true 
+
+COPY docker/assets/wait-for-it.sh /usr/local/bin/
+COPY docker/assets/wait-for-postgres.sh /usr/local/bin/
+
+WORKDIR /app
+COPY --from=builder /exred_ui/_build/prod/rel/exred_ui/releases/${VERSION}/exred_ui.tar.gz .
+RUN tar zxf exred_ui.tar.gz && rm exred_ui.tar.gz
+RUN chown -R root ./releases
+
+# truncate conf file, configuration will be passed in through environment variables (see conf. schemas)
+RUN echo "" > ./releases/${VERSION}/exred_ui.conf
+
+USER root
+CMD ["/app/bin/exred_ui", "foreground"]

@@ -1,0 +1,52 @@
+# Build container
+#################################
+FROM elixir:1.7 as builder
+
+WORKDIR /
+COPY apps/exred_ui exred_ui
+
+WORKDIR /exred_ui
+
+ENV MIX_ENV=prod
+
+RUN mix local.hex --force
+RUN mix local.rebar --force
+RUN mix do deps.get, deps.compile
+
+RUN MIX_ENV=prod mix phx.digest
+RUN MIX_ENV=prod mix compile
+RUN mix release --env=prod --verbose
+
+
+# Final image
+#################################
+FROM elixir:1.7
+
+ARG VERSION=0.1.5
+
+EXPOSE 4000
+
+ENV MIX_ENV=prod \
+    REPLACE_OS_VARS=true \
+    SHELL=/bin/bash
+
+COPY docker/x86/prod/assets/wait-for-it.sh /usr/local/bin/
+COPY docker/x86/prod/assets/wait-for-postgres.sh /usr/local/bin/
+
+RUN apt-get update && \ 
+    apt-get install -y \
+    postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
+
+
+WORKDIR /app
+COPY --from=builder /exred_ui/_build/prod/rel/exred_ui/releases/${VERSION}/exred_ui.tar.gz .
+RUN tar zxf exred_ui.tar.gz && rm exred_ui.tar.gz
+RUN chown -R root ./releases
+
+# truncate conf file, configuration will be passed in through environment variables (see conf. schemas)
+RUN echo "" > ./releases/${VERSION}/exred_ui.conf
+
+
+USER root
+CMD ["/app/bin/exred", "foreground"]
