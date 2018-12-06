@@ -15,13 +15,15 @@ HUBTAG_VERSION := zsolt001/$(APP_NAME):$(VERSION)
 HUBTAG_UNIQUE := zsolt001/$(IMAGE)
 HUBTAG_LATEST := zsolt001/$(LATEST)
 
+MAKE_DONE = '>>> MAKE DONE >>> $@'
+
 dev: export MIX_ENV = dev
 dev: compile
-	@echo MAKE DONE: $@
+	@echo $(MAKE_DONE)
 
 prod: export MIX_ENV = prod
 prod: git-status-test cleanprod compile
-	@echo MAKE DONE: $@
+	@echo $(MAKE_DONE)
 
 compile:
 	@echo ${LOG_PREFIX} getting deps
@@ -30,31 +32,31 @@ compile:
 	@mix deps.compile 1>/dev/null
 	@echo ${LOG_PREFIX} compiling application
 	@mix compile 
-	@echo MAKE DONE: $@
+	@echo $(MAKE_DONE)
 
 cleandev: export MIX_ENV = dev
 cleandev:
 	@echo ${LOG_PREFIX} cleaning
 	@rm -rf _build/dev deps
-	@echo MAKE DONE: $@
+	@echo $(MAKE_DONE)
 
 cleanprod: export MIX_ENV = prod
 cleanprod:
 	@echo ${LOG_PREFIX} cleaning
 	@rm -rf _build/prod deps
-	@echo MAKE DONE: $@
+	@echo $(MAKE_DONE)
 
 release: export MIX_ENV = prod
 release: prod
 	@echo ${LOG_PREFIX} creating release
 	@mix release --env=prod
-	@echo MAKE DONE: $@
+	@echo $(MAKE_DONE)
 
 docker.build: #git-status-test
 	@echo ${LOG_PREFIX} building image $(IMAGE) with context $(APP_DIR)
 	@docker build -t $(IMAGE) -f $(APP_DIR)/docker/Dockerfile.x86 $(APP_DIR) --build-arg VERSION=$(VERSION)
 	@docker tag $(IMAGE) $(LATEST)
-	@echo $(LOG_PREFIX) $@ DONE
+	@echo $(MAKE_DONE)
 
 docker.publish: docker.build
 	@echo ${LOG_PREFIX} tagging git repo with current version: $(VERSION)
@@ -71,12 +73,12 @@ docker.publish: docker.build
 	docker push $(HUBTAG_UNIQUE)
 	docker push $(HUBTAG_VERSION)
 	docker push $(HUBTAG_LATEST)
-	@echo $(LOG_PREFIX) $@ DONE
+	@echo $(MAKE_DONE)
 
 docs: git-status-test
 	@echo ${LOG_PREFIX} updating documentation
 	@mix docs 1>/dev/null
-	@echo MAKE DONE: $@
+	@echo $(MAKE_DONE)
 
 run:
 	iex -S mix
@@ -84,7 +86,7 @@ run:
 test:
 	@echo ${LOG_PREFIX} running tests
 	@mix test
-	@echo MAKE DONE: $@
+	@echo $(MAKE_DONE)
 
 git-status-test:
 	@test -z "$(shell git status -s 2>&1)" \
