@@ -7,6 +7,7 @@ VERSION_FILE := $(dir $(MKFILE_PATH))/VERSION
 VERSION := $(shell sed 's/^ *//;s/ *$$//' $(VERSION_FILE))
 
 LOG_PREFIX = '>>> MAKE >>> ${APP_NAME} | ${MIX_ENV}:'
+MAKE_DONE = '>>> MAKE DONE >>> $@'
 
 GIT_HASH := $(shell git rev-parse --short HEAD)
 IMAGE := $(APP_NAME):$(VERSION)-$(GIT_HASH)
@@ -15,7 +16,9 @@ HUBTAG_VERSION := zsolt001/$(APP_NAME):$(VERSION)
 HUBTAG_UNIQUE := zsolt001/$(IMAGE)
 HUBTAG_LATEST := zsolt001/$(LATEST)
 
-MAKE_DONE = '>>> MAKE DONE >>> $@'
+RPI_IMAGE := $(APP_NAME)_rpi:$(VERSION)-$(GIT_HASH)
+RPI_LATEST := $(APP_NAME)_rpi:latest
+
 
 dev: export MIX_ENV = dev
 dev: compile
@@ -58,6 +61,12 @@ docker.build: #git-status-test
 	@docker tag $(IMAGE) $(LATEST)
 	@echo $(MAKE_DONE)
 
+rpi-docker.build: #git-status-test
+	@echo ${LOG_PREFIX} building image $(RPI_IMAGE) with context $(APP_DIR)
+	@docker build -t $(RPI_IMAGE) -f $(APP_DIR)/docker/Dockerfile.rpi $(APP_DIR) --build-arg VERSION=$(VERSION)
+	@docker tag $(RPI_IMAGE) $(RPI_LATEST)
+	@echo $(MAKE_DONE)
+
 docker.publish: docker.build
 	@echo ${LOG_PREFIX} tagging git repo with current version: $(VERSION)
 	@git tag -a "v$(VERSION)" -m "version $(VERSION)" || echo "${LOG_PREFIX} WARNING git tag for this version already exists" 
@@ -92,3 +101,6 @@ git-status-test:
 	@test -z "$(shell git status -s 2>&1)" \
           && echo "Git repo is clean" \
           || (echo "Failed: uncommitted changes in git repo" && exit 1)
+
+rpi-docker-pre-build:
+	docker run --rm --privileged multiarch/qemu-user-static:register # --reset
