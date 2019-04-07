@@ -4,7 +4,8 @@ defmodule ExredUI.Editor do
   """
 
   import Ecto.Query, warn: false
-  alias ExredUI.Repo
+  # alias ExredUI.Repo
+  alias ExredUI.SqliteRepo, as: Repo
 
   alias ExredUI.Editor.Node
 

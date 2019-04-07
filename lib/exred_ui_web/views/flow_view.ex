@@ -1,38 +1,44 @@
 defmodule ExredUIWeb.FlowView do
   use ExredUIWeb, :view
   use JaSerializer.PhoenixView
-  alias ExredUIWeb.FlowView
 
-  attributes [:name, :info, :config, :service_id]
+  attributes([:name, :info, :config, :service_id])
 
-  has_many :nodes,
+  has_many(:nodes,
     serializer: ExredUIWeb.NodeView,
     include: false,
-    identifiers: :always #when_included
+    # when_included
+    identifiers: :always
+  )
 
-  has_many :connections,
+  has_many(:connections,
     serializer: ExredUIWeb.ConnectionView,
     include: false,
-    identifiers: :always #when_included
+    # when_included
+    identifiers: :always
+  )
 
-  def nodes(struct, conn) do
+  def nodes(struct, _conn) do
     case struct.nodes do
       %Ecto.Association.NotLoaded{} ->
         struct
         |> Ecto.assoc(:nodes)
-        |> ExredUI.Repo.all
-      other -> other
+        |> ExredUI.SqliteRepo.all()
+
+      other ->
+        other
     end
   end
 
-
-  def connections(struct, conn) do
+  def connections(struct, _conn) do
     case struct.connections do
       %Ecto.Association.NotLoaded{} ->
         struct
         |> Ecto.assoc(:connections)
-        |> ExredUI.Repo.all
-      other -> other
+        |> ExredUI.SqliteRepo.all()
+
+      other ->
+        other
     end
   end
 

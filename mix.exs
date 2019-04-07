@@ -8,13 +8,13 @@ defmodule ExredUI.Mixfile do
       app: :exred_ui,
       version: @version,
       elixir: "~> 1.5",
-      elixirc_paths: elixirc_paths(Mix.env),
+      elixirc_paths: elixirc_paths(Mix.env()),
       build_path: "./_build",
       config_path: "./config/config.exs",
       deps_path: "./deps",
       lockfile: "./mix.lock",
-      compilers: [:phoenix, :gettext] ++ Mix.compilers,
-      start_permanent: Mix.env == :prod,
+      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
     ]
@@ -26,13 +26,13 @@ defmodule ExredUI.Mixfile do
   def application do
     [
       mod: {ExredUI.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :sqlite_ecto2]
     ]
   end
 
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_),     do: ["lib"]
+  defp elixirc_paths(_), do: ["lib"]
 
   # Specifies your project dependencies.
   #
@@ -53,6 +53,7 @@ defmodule ExredUI.Mixfile do
       {:ecto_boot_migration, "~> 0.1.0"},
       {:distillery, "~> 1.5", runtime: false},
       {:conform, "~> 2.2"},
+      {:sqlite_ecto2, "~> 2.2"},
       {:ex_doc, "~> 0.19.0", only: :dev, runtime: false}
     ]
   end
@@ -67,7 +68,7 @@ defmodule ExredUI.Mixfile do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      "test": ["ecto.create --quiet", "ecto.migrate", "test"]
+      test: ["ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
 end

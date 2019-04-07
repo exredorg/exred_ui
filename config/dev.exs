@@ -46,3 +46,7 @@ config :exred_ui, ExredUI.Repo,
   hostname: "localhost",
   port: 5432,
   pool_size: 10
+
+config :exred_ui, ExredUI.SqliteRepo,
+  adapter: Sqlite.Ecto2,
+  database: "/tmp/exred.sqlite3"

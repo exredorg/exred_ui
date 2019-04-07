@@ -5,33 +5,52 @@ defmodule ExredUI.Application do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
-    {:ok,_} = EctoBootMigration.migrate(:exred_ui)
-    
+    Logger.info("Starting")
+
+    children = [
+      supervisor(ExredUI.SqliteRepo, []),
+      supervisor(ExredUIWeb.Endpoint, [])
+    ]
+
+    opts = [strategy: :one_for_one, name: ExredUI.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+
+  def oldstart(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    {:ok, _} = EctoBootMigration.migrate(:exred_ui)
+
     # workaround to make sure Repo is down
-    # EctoBootMigration only sends the exit signal to the Repo 
+    # EctoBootMigration only sends the exit signal to the Repo
     # but it doesn't wait for it to exit
-    # In some cases starting the Supervisor below fails because 
+    # In some cases starting the Supervisor below fails because
     # the Repo is still running
     case Process.whereis(ExredUI.Repo) do
-      nil -> :not_alive
-      
+      nil ->
+        :not_alive
+
       pid ->
         ref = Process.monitor(pid)
-        Logger.info "Waiting for ExredUI.Repo to exit"
+        Logger.info("Waiting for ExredUI.Repo to exit")
+
         receive do
-          {:DOWN, ^ref, _, _, _} -> 
-            Logger.info "ExredUI.Repo exited"
+          {:DOWN, ^ref, _, _, _} ->
+            Logger.info("ExredUI.Repo exited")
             :repo_is_down
         after
           30000 -> :timeout
         end
     end
-    
-    Logger.info "Starting"
+
+    Logger.info("Starting")
+
     children = [
       supervisor(ExredUI.Repo, []),
-      supervisor(ExredUIWeb.Endpoint, []),
+      supervisor(ExredUI.SqliteRepo, []),
+      supervisor(ExredUIWeb.Endpoint, [])
     ]
+
     opts = [strategy: :one_for_one, name: ExredUI.Supervisor]
     Supervisor.start_link(children, opts)
   end

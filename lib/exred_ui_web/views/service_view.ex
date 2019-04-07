@@ -1,26 +1,26 @@
 defmodule ExredUIWeb.ServiceView do
   use ExredUIWeb, :view
   use JaSerializer.PhoenixView
-  alias ExredUIWeb.ServiceView
 
-  attributes [:name, :info, :config]
+  attributes([:name, :info, :config])
 
-  has_many :flows,
+  has_many(:flows,
     serializer: ExredUIWeb.FlowView,
     include: true,
     identifiers: :when_included
+  )
 
-
-  def flows(struct, conn) do
+  def flows(struct, _conn) do
     case struct.flows do
       %Ecto.Association.NotLoaded{} ->
         struct
         |> Ecto.assoc(:flows)
-        |> ExredUI.Repo.all
-      other -> other
+        |> ExredUI.SqliteRepo.all()
+
+      other ->
+        other
     end
   end
-
 
   #
   # def render("index.json", %{services: services}) do

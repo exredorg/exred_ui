@@ -3,18 +3,18 @@ defmodule ExredUI.Editor.Service do
   import Ecto.Changeset
   alias ExredUI.Editor.Service
 
-
-  @primary_key {:id, :binary_id, autogenerate: true}
+  @primary_key {:id, Ecto.UUID, autogenerate: true}
+  @foreign_key_type Ecto.UUID
   @derive {Phoenix.Param, key: :id}
 
   schema "services" do
-    field :type, :string
+    field(:type, :string)
 
-    field :name, :string
-    field :info, :string
-    field :config, :map
+    field(:name, :string)
+    field(:info, :string)
+    field(:config, :map)
 
-    has_many :flows, ExredUI.Editor.Flow
+    has_many(:flows, ExredUI.Editor.Flow)
 
     timestamps()
   end
